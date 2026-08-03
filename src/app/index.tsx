@@ -1,98 +1,146 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
+import { DeckCard } from '@/components/DeckCard';
+import { ProgressRing } from '@/components/ProgressRing';
+import { StreakBadge } from '@/components/StreakBadge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { getSessionLogs } from '@/db/client';
+import { useTheme } from '@/hooks/use-theme';
+import { useStreak } from '@/hooks/useStreak';
+import { useDeckStore } from '@/store/deckStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { todayISO } from '@/utils/date';
 
 export default function HomeScreen() {
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const { getStreak } = useStreak();
+  const { decks, deckStats, totalDue, totalNew, refreshDecks, refreshStats } = useDeckStore();
+  const { dailyGoal } = useSettingsStore();
+  const [streak, setStreak] = useState(0);
+  const [todayReviewed, setTodayReviewed] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      await refreshDecks(db);
+      await refreshStats(db);
+      setStreak(await getStreak());
+      const logs = await getSessionLogs(db);
+      const today = todayISO();
+      const todayLogs = logs.filter((l) => l.date.split('T')[0] === today);
+      setTodayReviewed(todayLogs.reduce((sum, l) => sum + l.cardsReviewed, 0));
+    })();
+  }, [db, refreshDecks, refreshStats, getStreak]);
+
+  const totalCards = totalDue + totalNew;
+  const dailyProgress = dailyGoal > 0 ? Math.min(todayReviewed / dailyGoal, 1) : 0;
+  const decksWithStats = decks.map((d) => deckStats[d.id]).filter(Boolean);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <ScrollView
+      style={[styles.scrollView, { backgroundColor: theme.background }]}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + BottomTabInset + Spacing.three }]}>
+      <View style={styles.content}>
+        <ThemedText type="title" style={styles.title}>Nihongo</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>Spaced repetition for Japanese</ThemedText>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <View style={styles.row}>
+          <StreakBadge streak={streak} />
+          <View style={styles.progressContainer}>
+            <ProgressRing progress={dailyProgress} size={64} label={`${todayReviewed}`} />
+            <ThemedText themeColor="textSecondary" style={styles.progressLabel}>/ {dailyGoal} today</ThemedText>
+          </View>
+        </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        {totalCards > 0 && (
+          <Pressable onPress={() => router.push('/deck')}>
+            {({ pressed }) => (
+              <ThemedView style={[styles.quickStart, { backgroundColor: theme.primary, borderColor: theme.primary }, pressed && styles.pressed]}>
+                <ThemedText style={styles.quickStartText}>Start Review</ThemedText>
+                <ThemedText style={styles.quickStartSubtext}>{totalDue} due · {totalNew} new</ThemedText>
+              </ThemedView>
+            )}
+          </Pressable>
+        )}
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>Your Decks</ThemedText>
+        <View style={styles.deckList}>
+          {decksWithStats.map((deck) => (
+            <DeckCard key={deck.id} deck={deck} />
+          ))}
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
+  contentContainer: {
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
+  },
+  content: {
+    width: '100%',
     maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
     paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    gap: Spacing.three,
   },
   title: {
-    textAlign: 'center',
+    fontSize: 36,
+    fontWeight: '700' as const,
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    fontSize: 16,
   },
-  stepContainer: {
+  row: {
+    flexDirection: 'row',
     gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
+    alignItems: 'center',
+  },
+  progressContainer: {
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  progressLabel: {
+    fontSize: 12,
+  },
+  quickStart: {
+    borderRadius: Spacing.three,
     paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    paddingHorizontal: Spacing.five,
+    alignItems: 'center',
+    gap: Spacing.one,
+    width: '100%',
+  },
+  quickStartText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700' as const,
+  },
+  quickStartSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+  },
+  pressed: {
+    opacity: 0.8,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    marginTop: Spacing.two,
+  },
+  deckList: {
+    gap: Spacing.two,
+    width: '100%',
   },
 });
