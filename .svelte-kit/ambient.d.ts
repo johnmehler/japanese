@@ -38,6 +38,7 @@
  * The above values will be the same _even if_ different values for `ENVIRONMENT` or `PUBLIC_BASE_URL` are set at runtime, as they are statically replaced in your code with their build time values.
  */
 declare module '$env/static/private' {
+	export const VERCEL_OIDC_TOKEN: string;
 	export const ALLUSERSPROFILE: string;
 	export const ANDROID_HOME: string;
 	export const ANTHROPIC_AUTH_TOKEN: string;
@@ -60,7 +61,6 @@ declare module '$env/static/private' {
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
-	export const GIT_PAGER: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
@@ -94,7 +94,6 @@ declare module '$env/static/private' {
 	export const OneDrive: string;
 	export const OneDriveConsumer: string;
 	export const OS: string;
-	export const PAGER: string;
 	export const Path: string;
 	export const PATHEXT: string;
 	export const PROCESSOR_ARCHITECTURE: string;
@@ -126,8 +125,6 @@ declare module '$env/static/private' {
 	export const VSCODE_INJECTION: string;
 	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 	export const windir: string;
-	export const WINDSURF_CASCADE_TERMINAL: string;
-	export const WINDSURF_CASCADE_TERMINAL_KIND: string;
 }
 
 /**
@@ -214,6 +211,7 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		VERCEL_OIDC_TOKEN: string;
 		ALLUSERSPROFILE: string;
 		ANDROID_HOME: string;
 		ANTHROPIC_AUTH_TOKEN: string;
@@ -236,7 +234,6 @@ declare module '$env/dynamic/private' {
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
-		GIT_PAGER: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
@@ -270,7 +267,6 @@ declare module '$env/dynamic/private' {
 		OneDrive: string;
 		OneDriveConsumer: string;
 		OS: string;
-		PAGER: string;
 		Path: string;
 		PATHEXT: string;
 		PROCESSOR_ARCHITECTURE: string;
@@ -302,8 +298,6 @@ declare module '$env/dynamic/private' {
 		VSCODE_INJECTION: string;
 		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 		windir: string;
-		WINDSURF_CASCADE_TERMINAL: string;
-		WINDSURF_CASCADE_TERMINAL_KIND: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
