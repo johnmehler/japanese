@@ -1,12 +1,12 @@
-import { writable } from 'svelte';
-import type { DeckWithStats } from '$lib/db/schema';
 import {
-  getAllDecks,
-  getDeckStats,
-  getAllDueCardsCount,
-  getAllNewCardsCount,
-  getTodayReviewCount,
+    getAllDecks,
+    getAllDueCardsCount,
+    getAllNewCardsCount,
+    getDeckStats,
+    getTodayReviewCount,
 } from '$lib/db/client';
+import type { DeckWithStats } from '$lib/db/schema';
+import { writable } from 'svelte/store';
 
 export const decks = writable<DeckWithStats[]>([]);
 export const totalDue = writable(0);

@@ -9,8 +9,7 @@ import type { Quality } from '$lib/srs/sm2';
 import { createInitialState, sm2 } from '$lib/srs/sm2';
 import { nowISO } from '$lib/utils/date';
 import { shuffle } from '$lib/utils/shuffle';
-import { writable } from 'svelte';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { settings } from './settings';
 
 function uuid(): string {
@@ -86,7 +85,8 @@ export async function gradeCard(cardId: string, quality: Quality, deckId: string
 
   const idx = get(currentIndex);
   if (idx + 1 >= currentCards.length) {
-    const durationSec = startTime() ? Math.round((Date.now() - (startTime() as number)) / 1000) : 0;
+    const start = get(startTime);
+    const durationSec = start ? Math.round((Date.now() - start) / 1000) : 0;
     insertSessionLog({
       id: uuid(),
       deckId,

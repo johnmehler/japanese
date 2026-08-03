@@ -1,6 +1,5 @@
 {
-  "buildCommand": "npx expo export --platform web",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/(.*)",
