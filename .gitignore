@@ -1,11 +1,10 @@
-# dependencies
 node_modules/
 
 # build output
 dist/
 build/
 
-# SvelteKit
+# sveltekit
 .svelte-kit/
 
 # debug
@@ -13,16 +12,15 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
+# os
 .DS_Store
 
-# local env files
-.env*.local
+# env
+.env*
+!.env.example
 
 # typescript
 *.tsbuildinfo
 
-# misc
-*.orig.*
-*.pem
+# vercel
 .vercel

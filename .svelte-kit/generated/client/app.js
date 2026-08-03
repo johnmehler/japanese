@@ -11,23 +11,13 @@ export { matchers } from './matchers.js';
 export const nodes = [
 	() => import('./nodes/0'),
 	() => import('./nodes/1'),
-	() => import('./nodes/2'),
-	() => import('./nodes/3'),
-	() => import('./nodes/4'),
-	() => import('./nodes/5'),
-	() => import('./nodes/6'),
-	() => import('./nodes/7')
+	() => import('./nodes/2')
 ];
 
 export const server_loads = [];
 
 export const dictionary = {
-		"/": [2],
-		"/deck": [3],
-		"/deck/[deckId]": [4],
-		"/deck/[deckId]/review": [5],
-		"/settings": [6],
-		"/stats": [7]
+		"/": [2]
 	};
 
 export const hooks = {
