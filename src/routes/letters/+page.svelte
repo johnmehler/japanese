@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { getKana, type KanaSet } from '$lib/data/kana';
 	import { SRSDeck } from '$lib/srs';
 
@@ -22,7 +23,36 @@
 	let choices = $state<string[]>([]);
 	let selectedChoice = $state<string | null>(null);
 
+	type LetterStats = {
+		total: number;
+		correct: number;
+		wrong: number;
+	};
+
+	function getLetterStats(): Record<string, LetterStats> {
+		if (typeof localStorage === 'undefined') return {};
+		try {
+			const raw = localStorage.getItem('letters:stats');
+			return raw ? JSON.parse(raw) : {};
+		} catch {
+			return {};
+		}
+	}
+
+	function recordAnswer(char: string, correct: boolean) {
+		if (typeof localStorage === 'undefined') return;
+		const stats = getLetterStats();
+		const current = stats[char] ?? { total: 0, correct: 0, wrong: 0 };
+		stats[char] = {
+			total: current.total + 1,
+			correct: current.correct + (correct ? 1 : 0),
+			wrong: current.wrong + (correct ? 0 : 1),
+		};
+		localStorage.setItem('letters:stats', JSON.stringify(stats));
+	}
+
 	function getMissCounts(set: KanaSet): Record<string, number> {
+		if (typeof localStorage === 'undefined') return {};
 		try {
 			const raw = localStorage.getItem(`letters:miss:${set}`);
 			return raw ? JSON.parse(raw) : {};
@@ -32,17 +62,35 @@
 	}
 
 	function recordMiss(set: KanaSet, char: string) {
+		if (typeof localStorage === 'undefined') return;
 		const counts = getMissCounts(set);
 		counts[char] = (counts[char] ?? 0) + 1;
 		localStorage.setItem(`letters:miss:${set}`, JSON.stringify(counts));
 	}
 
-	function getCommonlyMissed(set: KanaSet, limit = 15): string[] {
-		const counts = getMissCounts(set);
-		return Object.entries(counts)
-			.sort((a, b) => b[1] - a[1])
+	function getMissedLetters(set: KanaSet, limit = 15): string[] {
+		const stats = getLetterStats();
+		const legacyCounts = getMissCounts(set);
+		if (set === 'both') {
+			for (const [char, count] of Object.entries(getMissCounts('hiragana')))
+				legacyCounts[char] = Math.max(legacyCounts[char] ?? 0, count);
+			for (const [char, count] of Object.entries(getMissCounts('katakana')))
+				legacyCounts[char] = Math.max(legacyCounts[char] ?? 0, count);
+		}
+		const chars = getKana(set);
+
+		return chars
+			.map(({ char }) => {
+				const stat = stats[char];
+				const wrong = Math.max(stat?.wrong ?? 0, legacyCounts[char] ?? 0);
+				const total = Math.max(stat?.total ?? 0, wrong);
+				const missRate = total > 0 ? wrong / total : 0;
+				return { char, wrong, score: wrong * (1 + missRate) };
+			})
+			.filter(({ wrong }) => wrong > 0)
+			.sort((a, b) => b.score - a.score || b.wrong - a.wrong)
 			.slice(0, limit)
-			.map(([char]) => char);
+			.map(({ char }) => char);
 	}
 
 	function startQuiz(set: KanaSet, direction: 'forward' | 'reverse' = 'forward') {
@@ -64,18 +112,13 @@
 	}
 
 	function startMissedQuiz(set: KanaSet) {
-		let missed: string[];
-		if (set === 'both') {
-			missed = [...getCommonlyMissed('hiragana'), ...getCommonlyMissed('katakana')];
-		} else {
-			missed = getCommonlyMissed(set);
-		}
+		const missed = getMissedLetters(set);
 		if (missed.length === 0) return;
 		selectedSet = set;
 		quizDirection = 'forward';
 		deck = new SRSDeck(`letters:${set}`);
 		queue = shuffle(missed);
-		quizLabel = 'Commonly Missed';
+		quizLabel = 'Missed';
 		sessionCount = 0;
 		sessionCorrect = 0;
 		feedback = 'none';
@@ -136,6 +179,7 @@
 		feedback = correct ? 'correct' : 'wrong';
 		sessionCount++;
 		if (correct) sessionCorrect++;
+		recordAnswer(currentId, correct);
 
 		deck.review(currentId, correct ? 5 : 0);
 
@@ -152,6 +196,12 @@
 	}
 
 	function handleKey(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			goto('/');
+			return;
+		}
+
 		if (e.key === 'Enter') {
 			if (feedback !== 'none') {
 				nextCard();
@@ -194,17 +244,15 @@
 	let missedBoth = $state(0);
 
 	function refreshMissedCounts() {
-		missedHiragana = getCommonlyMissed('hiragana').length;
-		missedKatakana = getCommonlyMissed('katakana').length;
-		const hira = getCommonlyMissed('hiragana');
-		const kata = getCommonlyMissed('katakana');
-		missedBoth = hira.length + kata.length;
+		missedHiragana = getMissedLetters('hiragana').length;
+		missedKatakana = getMissedLetters('katakana').length;
+		missedBoth = getMissedLetters('both').length;
 	}
 
 	refreshMissedCounts();
 </script>
 
-<svelte:window onkeydown={mode === 'quiz' ? handleKey : undefined} />
+<svelte:window onkeydown={handleKey} />
 
 {#if mode === 'select'}
 	<div class="select-screen">
@@ -242,7 +290,7 @@
 		</div>
 		{#if missedBoth > 0}
 			<div class="missed-section">
-				<p class="missed-title">Commonly Missed</p>
+				<p class="missed-title">Missed</p>
 				<div class="btn-pair">
 					{#if missedHiragana > 0}
 						<button onclick={() => startMissedQuiz('hiragana')} class="mode-btn missed-btn">

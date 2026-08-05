@@ -1,3 +1,6 @@
+import n4Csv from '../../../vocab/n4.csv?raw';
+import n5Csv from '../../../vocab/n5.csv?raw';
+
 export type VocabItem = {
 	id: string;
 	word: string;
@@ -6,7 +9,9 @@ export type VocabItem = {
 	meaning: string;
 };
 
-export const n5Vocab: VocabItem[] = [
+export const n4Vocab: VocabItem[] = parseVocabCsv(n4Csv, 'n4');
+
+const legacyN5Vocab: VocabItem[] = [
 	{ id: 'watashi', word: '私', kana: 'わたし', romaji: 'watashi', meaning: 'I, me' },
 	{ id: 'anata', word: 'あなた', kana: 'あなた', romaji: 'anata', meaning: 'you' },
 	{ id: 'kare', word: '彼', kana: 'かれ', romaji: 'kare', meaning: 'he, boyfriend' },
@@ -113,3 +118,22 @@ export const n5Vocab: VocabItem[] = [
 	{ id: 'fuku', word: '服', kana: 'ふく', romaji: 'fuku', meaning: 'clothes' },
 	{ id: 'kutsu', word: '靴', kana: 'くつ', romaji: 'kutsu', meaning: 'shoes' },
 ];
+
+function parseVocabCsv(csv: string, level: string): VocabItem[] {
+	const rows = csv.trim().split(/\r?\n/).slice(1);
+	return rows.map((row, index) => {
+		const fields = [...row.matchAll(/(?:^|,)\s*(?:"([^"]*(?:""[^"]*)*)"|([^,]*))/g)].map(
+			(match) => (match[1] ?? match[2] ?? '').replace(/""/g, '"').trim()
+		);
+		const [word, kana, meaning] = fields;
+		return {
+			id: `${level}-${index}-${word}`,
+			word,
+			kana,
+			romaji: '',
+			meaning,
+		};
+	});
+}
+
+export const n5Vocab: VocabItem[] = parseVocabCsv(n5Csv, 'n5');

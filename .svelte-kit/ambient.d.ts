@@ -39,6 +39,7 @@
  */
 declare module '$env/static/private' {
 	export const VERCEL_OIDC_TOKEN: string;
+	export const ACP_BACKEND: string;
 	export const ALLUSERSPROFILE: string;
 	export const ANDROID_HOME: string;
 	export const ANTHROPIC_AUTH_TOKEN: string;
@@ -49,7 +50,6 @@ declare module '$env/static/private' {
 	export const APPDATA: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
 	export const COLOR: string;
-	export const COLORTERM: string;
 	export const CommonProgramFiles: string;
 	export const CommonProgramW6432: string;
 	export const COMPUTERNAME: string;
@@ -58,15 +58,13 @@ declare module '$env/static/private' {
 	export const EDITOR: string;
 	export const EFC_2440_1592913036: string;
 	export const EFC_2440_4126798990: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
-	export const GIT_ASKPASS: string;
+	export const ELECTRON_RUN_AS_NODE: string;
+	export const GIT_TERMINAL_PROMPT: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
 	export const INIT_CWD: string;
 	export const JAVA_HOME: string;
-	export const LANG: string;
 	export const LOCALAPPDATA: string;
 	export const LOGONSERVER: string;
 	export const NODE: string;
@@ -111,20 +109,22 @@ declare module '$env/static/private' {
 	export const SystemDrive: string;
 	export const SystemRoot: string;
 	export const TEMP: string;
-	export const TERM_PROGRAM: string;
-	export const TERM_PROGRAM_VERSION: string;
 	export const TMP: string;
 	export const USERDOMAIN: string;
 	export const USERDOMAIN_ROAMINGPROFILE: string;
 	export const USERNAME: string;
 	export const USERPROFILE: string;
-	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
-	export const VSCODE_GIT_ASKPASS_MAIN: string;
-	export const VSCODE_GIT_ASKPASS_NODE: string;
-	export const VSCODE_GIT_IPC_HANDLE: string;
-	export const VSCODE_INJECTION: string;
-	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
+	export const VSCODE_CODE_CACHE_PATH: string;
+	export const VSCODE_CRASH_REPORTER_PROCESS_TYPE: string;
+	export const VSCODE_CWD: string;
+	export const VSCODE_ESM_ENTRYPOINT: string;
+	export const VSCODE_HANDLES_UNCAUGHT_ERRORS: string;
+	export const VSCODE_IPC_HOOK: string;
+	export const VSCODE_NLS_CONFIG: string;
+	export const VSCODE_PID: string;
 	export const windir: string;
+	export const WINDSURF_EXT_HOST_PID: string;
+	export const WINDSURF_IDE_TYPE: string;
 }
 
 /**
@@ -212,6 +212,7 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		VERCEL_OIDC_TOKEN: string;
+		ACP_BACKEND: string;
 		ALLUSERSPROFILE: string;
 		ANDROID_HOME: string;
 		ANTHROPIC_AUTH_TOKEN: string;
@@ -222,7 +223,6 @@ declare module '$env/dynamic/private' {
 		APPDATA: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
 		COLOR: string;
-		COLORTERM: string;
 		CommonProgramFiles: string;
 		CommonProgramW6432: string;
 		COMPUTERNAME: string;
@@ -231,15 +231,13 @@ declare module '$env/dynamic/private' {
 		EDITOR: string;
 		EFC_2440_1592913036: string;
 		EFC_2440_4126798990: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
-		GIT_ASKPASS: string;
+		ELECTRON_RUN_AS_NODE: string;
+		GIT_TERMINAL_PROMPT: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
 		INIT_CWD: string;
 		JAVA_HOME: string;
-		LANG: string;
 		LOCALAPPDATA: string;
 		LOGONSERVER: string;
 		NODE: string;
@@ -284,20 +282,22 @@ declare module '$env/dynamic/private' {
 		SystemDrive: string;
 		SystemRoot: string;
 		TEMP: string;
-		TERM_PROGRAM: string;
-		TERM_PROGRAM_VERSION: string;
 		TMP: string;
 		USERDOMAIN: string;
 		USERDOMAIN_ROAMINGPROFILE: string;
 		USERNAME: string;
 		USERPROFILE: string;
-		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
-		VSCODE_GIT_ASKPASS_MAIN: string;
-		VSCODE_GIT_ASKPASS_NODE: string;
-		VSCODE_GIT_IPC_HANDLE: string;
-		VSCODE_INJECTION: string;
-		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
+		VSCODE_CODE_CACHE_PATH: string;
+		VSCODE_CRASH_REPORTER_PROCESS_TYPE: string;
+		VSCODE_CWD: string;
+		VSCODE_ESM_ENTRYPOINT: string;
+		VSCODE_HANDLES_UNCAUGHT_ERRORS: string;
+		VSCODE_IPC_HOOK: string;
+		VSCODE_NLS_CONFIG: string;
+		VSCODE_PID: string;
 		windir: string;
+		WINDSURF_EXT_HOST_PID: string;
+		WINDSURF_IDE_TYPE: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
