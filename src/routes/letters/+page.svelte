@@ -29,6 +29,7 @@
 	// Reverse mode: multiple choice
 	let choices = $state<string[]>([]);
 	let selectedChoice = $state<string | null>(null);
+	let isMissedMode = $state(false);
 
 	type LetterStats = {
 		total: number;
@@ -102,6 +103,7 @@
 
 	function startQuiz(set: KanaSet, direction: 'forward' | 'reverse' = 'forward') {
 		selectedSet = set;
+		isMissedMode = false;
 		quizDirection = direction;
 		deck = new SRSDeck(`letters:${set}`);
 		const chars = getKana(set);
@@ -127,6 +129,7 @@
 		const missed = getMissedLetters(set);
 		if (missed.length === 0) return;
 		selectedSet = set;
+		isMissedMode = true;
 		quizDirection = direction;
 		deck = new SRSDeck(`letters:${set}`);
 		queue = shuffle(missed);
@@ -412,9 +415,9 @@
 		<div class="done-screen">
 			<h1>Study Complete</h1>
 			<p class="score">{studyCount} reviewed</p>
-			<button onclick={() => startMissedStudy(selectedMissedSet!)} class="action-btn">Study Again</button>
-			<button onclick={backToSelect} class="action-btn secondary">Change Mode</button>
-			<a href="/" class="back-link">← Home</a>
+			<button onclick={() => startMissedStudy(selectedMissedSet!)} class="action-btn">Redo This Set</button>
+			<button onclick={backToSelect} class="action-btn secondary">Return to Letters Menu</button>
+			<button onclick={() => goto('/')} class="action-btn secondary">Return to Main Menu</button>
 		</div>
 	{:else}
 		<div class="quiz-screen">
@@ -459,9 +462,9 @@
 	<div class="done-screen">
 		<h1>Session Complete</h1>
 		<p class="score">{sessionCorrect} / {sessionCount} correct</p>
-		<button onclick={() => startQuiz(selectedSet!, quizDirection)} class="action-btn">Study Again</button>
-		<button onclick={backToSelect} class="action-btn secondary">Change Set</button>
-		<a href="/" class="back-link">← Home</a>
+		<button onclick={() => isMissedMode ? startMissedQuiz(selectedSet!, quizDirection) : startQuiz(selectedSet!, quizDirection)} class="action-btn">Redo This Set</button>
+		<button onclick={backToSelect} class="action-btn secondary">Return to Letters Menu</button>
+		<button onclick={() => goto('/')} class="action-btn secondary">Return to Main Menu</button>
 	</div>
 {:else}
 	<div class="quiz-screen">

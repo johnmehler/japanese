@@ -236,16 +236,16 @@
 	}
 
 	// --- Test mode ---
-	function startTest(missedOnly = false) {
+	let currentTestType = $state<TestType>('meaning');
+	function startTest(testType: TestType) {
+		currentTestType = testType;
 		deck = new SRSDeck(`vocab:${selectedLevel}`);
 		const progress = loadProgress();
-		const availableIds = missedOnly ? getMissedIds(progress) : getVocab().map((v) => v.id);
+		const availableIds = getVocab().map((v) => v.id);
 		const ids = weightedPick(availableIds, availableIds.length, progress);
 		testQueue = ids.map((id) => {
 			const item = getItem(id)!;
-			const stats = progress[id];
-			const type: TestType = item.word !== item.kana && (stats?.correct ?? 0) >= 2 && Math.random() < 0.4 ? 'reading' : 'meaning';
-			return { item, type, choices: type === 'meaning' ? makeChoices(item) : undefined };
+			return { item, type: testType, choices: testType === 'meaning' ? makeChoices(item) : undefined };
 		});
 		testCount = 0;
 		testCorrect = 0;
@@ -333,12 +333,22 @@
 		}
 		if (menuStage === 'options' && e.key === '1') {
 			e.preventDefault();
-			startTest();
+			startStudy(false);
 			return;
 		}
 		if (menuStage === 'options' && e.key === '2' && getMissedIds(loadProgress()).length > 0) {
 			e.preventDefault();
-			startTest(true);
+			startStudy(true);
+			return;
+		}
+		if (menuStage === 'options' && e.key === '3') {
+			e.preventDefault();
+			startTest('meaning');
+			return;
+		}
+		if (menuStage === 'options' && e.key === '4') {
+			e.preventDefault();
+			startTest('reading');
 			return;
 		}
 		if (isBackKey(e)) {
@@ -384,14 +394,22 @@
 		<a href="/" class="back-link">← Home</a>
 			{:else}
 				<h1>{selectedLevel.toUpperCase()} Vocab</h1>
-				<p class="subtitle">Choose a quiz</p>
-				<button onclick={() => startTest()} class="mode-btn" disabled={getVocab().length === 0}>
-					<span class="mode-label"><span class="shortcut">1</span> All {selectedLevel.toUpperCase()} Vocab</span>
-					<span class="mode-sample">Cycle every word</span>
+				<p class="subtitle">Choose a mode</p>
+				<button onclick={() => startStudy(false)} class="mode-btn" disabled={getVocab().length === 0}>
+					<span class="mode-label"><span class="shortcut">1</span> Learn</span>
+					<span class="mode-sample">Flashcards (Sort 1-4)</span>
 				</button>
-				<button onclick={() => startTest(true)} class="mode-btn" disabled={getMissedIds(loadProgress()).length === 0}>
+				<button onclick={() => startStudy(true)} class="mode-btn" disabled={getMissedIds(loadProgress()).length === 0}>
 					<span class="mode-label"><span class="shortcut">2</span> Review</span>
-					<span class="mode-sample">Weighted missed answers</span>
+					<span class="mode-sample">Weighted based on missed items</span>
+				</button>
+				<button onclick={() => startTest('meaning')} class="mode-btn" disabled={getVocab().length === 0}>
+					<span class="mode-label"><span class="shortcut">3</span> Multiple Choice</span>
+					<span class="mode-sample">Test with 4 options</span>
+				</button>
+				<button onclick={() => startTest('reading')} class="mode-btn" disabled={getVocab().length === 0}>
+					<span class="mode-label"><span class="shortcut">4</span> Quiz</span>
+					<span class="mode-sample">Type the answer</span>
 				</button>
 				<p class="hint">H / Esc back</p>
 			{/if}
@@ -467,7 +485,7 @@
 		<div class="done-screen">
 			<h1>Quiz Complete</h1>
 			<p class="score">{testCorrect} / {testCount} correct</p>
-			<button onclick={() => startTest()} class="action-btn">Quiz Again</button>
+			<button onclick={() => startTest(currentTestType)} class="action-btn">Quiz Again</button>
 			<button onclick={backToSelect} class="action-btn secondary">Back</button>
 			<a href="/" class="back-link">← Home</a>
 		</div>
@@ -483,9 +501,19 @@
 				{testCurrent.type === 'reading' ? 'Type the reading (kana)' : 'Select the correct meaning'}
 			</div>
 
-			<div class="char-display">{testCurrent.type === 'reading' ? testCurrent.item.word : testCurrent.item.kana}</div>
-			{#if testCurrent.item.word !== testCurrent.item.kana}
-				<div class="card-kanji">{testCurrent.type === 'reading' ? testCurrent.item.kana : testCurrent.item.word}</div>
+			<div class="char-display">
+				{testCurrent.type === 'reading' 
+					? (testCurrent.item.word !== testCurrent.item.kana ? testCurrent.item.word : testCurrent.item.meaning)
+					: testCurrent.item.word}
+			</div>
+			{#if testCurrent.type === 'reading'}
+				{#if testCurrent.item.word !== testCurrent.item.kana}
+					<div class="card-kanji">{testCurrent.item.meaning}</div>
+				{/if}
+			{:else}
+				{#if testCurrent.item.word !== testCurrent.item.kana}
+					<div class="card-kanji">{testCurrent.item.kana}</div>
+				{/if}
 			{/if}
 
 			{#if testFeedback === 'none'}
