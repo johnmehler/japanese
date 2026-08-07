@@ -3,8 +3,9 @@
 	import { getKana, type KanaSet } from '$lib/data/kana';
 	import { SRSDeck } from '$lib/srs';
 
-	let mode = $state<'select' | 'quiz'>('select');
+	let mode = $state<'select' | 'missed-options' | 'quiz' | 'study'>('select');
 	let selectedSet = $state<KanaSet | null>(null);
+	let selectedMissedSet = $state<KanaSet | null>(null);
 	let deck = $state<SRSDeck | null>(null);
 	let quizLabel = $state('');
 	let quizDirection = $state<'forward' | 'reverse'>('forward');
@@ -18,6 +19,12 @@
 	let sessionCount = $state(0);
 	let sessionCorrect = $state(0);
 	let inputEl = $state<HTMLInputElement | null>(null);
+
+	// Study state
+	let studyQueue = $state<string[]>([]);
+	let studyId = $state<string | null>(null);
+	let studyFlipped = $state(false);
+	let studyCount = $state(0);
 
 	// Reverse mode: multiple choice
 	let choices = $state<string[]>([]);
@@ -111,20 +118,67 @@
 		nextCard();
 	}
 
-	function startMissedQuiz(set: KanaSet) {
+	function openMissedOptions(set: KanaSet) {
+		selectedMissedSet = set;
+		mode = 'missed-options';
+	}
+
+	function startMissedQuiz(set: KanaSet, direction: 'forward' | 'reverse' = 'forward') {
 		const missed = getMissedLetters(set);
 		if (missed.length === 0) return;
 		selectedSet = set;
-		quizDirection = 'forward';
+		quizDirection = direction;
 		deck = new SRSDeck(`letters:${set}`);
 		queue = shuffle(missed);
 		quizLabel = 'Missed';
+		if (direction === 'reverse') quizLabel += ' (reverse)';
 		sessionCount = 0;
 		sessionCorrect = 0;
 		feedback = 'none';
 		input = '';
 		mode = 'quiz';
 		nextCard();
+	}
+
+	function startMissedStudy(set: KanaSet) {
+		const missed = getMissedLetters(set);
+		if (missed.length === 0) return;
+		selectedSet = set;
+		deck = new SRSDeck(`letters:${set}`);
+		studyQueue = shuffle(missed);
+		studyCount = 0;
+		studyFlipped = false;
+		mode = 'study';
+		nextStudyCard();
+	}
+
+	function nextStudyCard() {
+		if (studyQueue.length === 0) {
+			studyId = null;
+			return;
+		}
+		studyId = studyQueue.shift() ?? null;
+		const chars = getKana(selectedSet!);
+		const found = chars.find((c) => c.char === studyId);
+		currentChar = found?.char ?? '';
+		currentRomaji = found?.romaji ?? '';
+		studyFlipped = false;
+		studyCount++;
+	}
+
+	function flipStudyCard() {
+		studyFlipped = !studyFlipped;
+	}
+
+	function studyRate(rating: 'again' | 'hard' | 'good' | 'easy') {
+		if (!deck || !studyId) return;
+		const quality = rating === 'again' ? 0 : rating === 'hard' ? 3 : rating === 'good' ? 4 : 5;
+		deck.review(studyId, quality);
+
+		if (rating === 'again' || rating === 'hard') {
+			studyQueue.splice(Math.min(rating === 'again' ? 2 : 4, studyQueue.length), 0, studyId);
+		}
+		nextStudyCard();
 	}
 
 	function shuffle(arr: string[]) {
@@ -198,22 +252,42 @@
 	function handleKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			e.preventDefault();
-			goto('/');
+			if (mode === 'missed-options' || mode === 'study') backToSelect();
+			else goto('/');
 			return;
 		}
 
-		if (e.key === 'Enter') {
-			if (feedback !== 'none') {
-				nextCard();
-			} else {
-				submit();
+		if (mode === 'study') {
+			if (studyFlipped && ['1', '2', '3', '4'].includes(e.key)) {
+				e.preventDefault();
+				studyRate(({ '1': 'again', '2': 'hard', '3': 'good', '4': 'easy' } as any)[e.key]);
+				return;
 			}
-		} else if (e.key === ' ' && feedback !== 'none') {
-			e.preventDefault();
-			nextCard();
-		} else if (quizDirection === 'reverse' && feedback === 'none' && e.key >= '1' && e.key <= '4') {
-			const idx = parseInt(e.key) - 1;
-			if (choices[idx]) selectChoice(choices[idx]);
+			if (e.key === ' ' || e.key === 'Enter') {
+				e.preventDefault();
+				if (studyFlipped) {
+					studyRate('good');
+				} else {
+					flipStudyCard();
+				}
+			}
+			return;
+		}
+
+		if (mode === 'quiz') {
+			if (e.key === 'Enter') {
+				if (feedback !== 'none') {
+					nextCard();
+				} else {
+					submit();
+				}
+			} else if (e.key === ' ' && feedback !== 'none') {
+				e.preventDefault();
+				nextCard();
+			} else if (quizDirection === 'reverse' && feedback === 'none' && e.key >= '1' && e.key <= '4') {
+				const idx = parseInt(e.key) - 1;
+				if (choices[idx]) selectChoice(choices[idx]);
+			}
 		}
 	}
 
@@ -293,18 +367,18 @@
 				<p class="missed-title">Missed</p>
 				<div class="btn-pair">
 					{#if missedHiragana > 0}
-						<button onclick={() => startMissedQuiz('hiragana')} class="mode-btn missed-btn">
+						<button onclick={() => openMissedOptions('hiragana')} class="mode-btn missed-btn">
 							<span class="mode-label">Hiragana</span>
 							<span class="mode-sample">{missedHiragana} letters</span>
 						</button>
 					{/if}
 					{#if missedKatakana > 0}
-						<button onclick={() => startMissedQuiz('katakana')} class="mode-btn missed-btn">
+						<button onclick={() => openMissedOptions('katakana')} class="mode-btn missed-btn">
 							<span class="mode-label">Katakana</span>
 							<span class="mode-sample">{missedKatakana} letters</span>
 						</button>
 					{/if}
-					<button onclick={() => startMissedQuiz('both')} class="mode-btn missed-btn">
+					<button onclick={() => openMissedOptions('both')} class="mode-btn missed-btn">
 						<span class="mode-label">Both</span>
 						<span class="mode-sample">{missedBoth} letters</span>
 					</button>
@@ -313,6 +387,74 @@
 		{/if}
 		<a href="/" class="back-link">← Home</a>
 	</div>
+{:else if mode === 'missed-options'}
+	<div class="select-screen">
+		<h1>Missed Letters</h1>
+		<p class="subtitle">Select a study mode</p>
+		<div class="btn-pair">
+			<button onclick={() => startMissedStudy(selectedMissedSet!)} class="mode-btn">
+				<span class="mode-label">Flashcards</span>
+				<span class="mode-sample">Flip to memorize</span>
+			</button>
+			<button onclick={() => startMissedQuiz(selectedMissedSet!, 'forward')} class="mode-btn">
+				<span class="mode-label">Quiz</span>
+				<span class="mode-sample">Type romaji</span>
+			</button>
+			<button onclick={() => startMissedQuiz(selectedMissedSet!, 'reverse')} class="mode-btn reverse-btn">
+				<span class="mode-label">Reverse Quiz</span>
+				<span class="mode-sample">Select kana</span>
+			</button>
+		</div>
+		<button onclick={backToSelect} class="back-link">← Back</button>
+	</div>
+{:else if mode === 'study'}
+	{#if studyId === null}
+		<div class="done-screen">
+			<h1>Study Complete</h1>
+			<p class="score">{studyCount} reviewed</p>
+			<button onclick={() => startMissedStudy(selectedMissedSet!)} class="action-btn">Study Again</button>
+			<button onclick={backToSelect} class="action-btn secondary">Change Mode</button>
+			<a href="/" class="back-link">← Home</a>
+		</div>
+	{:else}
+		<div class="quiz-screen">
+			<div class="quiz-header">
+				<button onclick={backToSelect} class="back-btn">←</button>
+				<span class="counter">Study · {studyCount} reviewed · {studyQueue.length} left</span>
+				<div style="width: 24px"></div>
+			</div>
+
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="card {studyFlipped ? 'flipped' : ''}" onclick={flipStudyCard}>
+				<div class="card-face card-front">
+					<span class="char-display">{currentChar}</span>
+				</div>
+				<div class="card-face card-back">
+					<span class="char-display">{currentChar}</span>
+					<span class="romaji-display">{currentRomaji}</span>
+				</div>
+			</div>
+
+			<div class="study-controls {studyFlipped ? 'visible' : ''}">
+				<button onclick={() => studyRate('again')} class="rate-btn again">
+					<span class="key-hint">1</span>Again
+				</button>
+				<button onclick={() => studyRate('hard')} class="rate-btn hard">
+					<span class="key-hint">2</span>Hard
+				</button>
+				<button onclick={() => studyRate('good')} class="rate-btn good">
+					<span class="key-hint">3</span>Good
+				</button>
+				<button onclick={() => studyRate('easy')} class="rate-btn easy">
+					<span class="key-hint">4</span>Easy
+				</button>
+			</div>
+			{#if !studyFlipped}
+				<p class="hint">press space or click card to flip</p>
+			{/if}
+		</div>
+	{/if}
 {:else if currentId === null}
 	<div class="done-screen">
 		<h1>Session Complete</h1>
@@ -627,4 +769,101 @@
 		font-weight: 600;
 		color: var(--text);
 	}
+
+	.card {
+		width: 100%;
+		max-width: 400px;
+		min-height: 280px;
+		perspective: 1000px;
+		cursor: pointer;
+		position: relative;
+		margin: 1.5rem 0;
+	}
+
+	.card-face {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--surface);
+		backface-visibility: hidden;
+		transition: transform 0.4s;
+		padding: 1.5rem;
+	}
+
+	.card-front {
+		transform: rotateY(0deg);
+	}
+
+	.card-back {
+		transform: rotateY(180deg);
+	}
+
+	.card.flipped .card-front {
+		transform: rotateY(-180deg);
+	}
+
+	.card.flipped .card-back {
+		transform: rotateY(0deg);
+	}
+
+	.romaji-display {
+		font-size: 2rem;
+		color: var(--text-secondary);
+		margin-top: 1rem;
+	}
+
+	.study-controls {
+		display: flex;
+		gap: 0.5rem;
+		width: 100%;
+		max-width: 400px;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s;
+	}
+
+	.study-controls.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.rate-btn {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.75rem 0;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--surface);
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-weight: 500;
+		transition: all 0.15s;
+		color: var(--text);
+	}
+
+	.rate-btn:hover {
+		filter: brightness(0.95);
+	}
+
+	.key-hint {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0 0.25rem;
+		min-width: 1.2rem;
+	}
+
+	.rate-btn.again { border-bottom-color: #ef4444; border-bottom-width: 3px; }
+	.rate-btn.hard { border-bottom-color: #f97316; border-bottom-width: 3px; }
+	.rate-btn.good { border-bottom-color: #22c55e; border-bottom-width: 3px; }
+	.rate-btn.easy { border-bottom-color: #3b82f6; border-bottom-width: 3px; }
 </style>

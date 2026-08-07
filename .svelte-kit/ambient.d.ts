@@ -39,15 +39,21 @@
  */
 declare module '$env/static/private' {
 	export const VERCEL_OIDC_TOKEN: string;
-	export const ACP_BACKEND: string;
 	export const ALLUSERSPROFILE: string;
 	export const ANDROID_HOME: string;
 	export const ANTHROPIC_AUTH_TOKEN: string;
 	export const ANTHROPIC_BASE_URL: string;
 	export const ANTHROPIC_MODEL: string;
 	export const ANTHROPIC_SMALL_FAST_MODEL: string;
+	export const ANTIGRAVITY_AGENT: string;
+	export const ANTIGRAVITY_CSRF_TOKEN: string;
+	export const ANTIGRAVITY_EDITOR_APP_ROOT: string;
+	export const ANTIGRAVITY_LS_ADDRESS: string;
+	export const ANTIGRAVITY_SOURCE_METADATA: string;
+	export const ANTIGRAVITY_TRAJECTORY_ID: string;
 	export const API_TIMEOUT_MS: string;
 	export const APPDATA: string;
+	export const CARGO_TARGET_DIR: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
 	export const COLOR: string;
 	export const CommonProgramFiles: string;
@@ -56,10 +62,8 @@ declare module '$env/static/private' {
 	export const ComSpec: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_2440_1592913036: string;
-	export const EFC_2440_4126798990: string;
-	export const ELECTRON_RUN_AS_NODE: string;
-	export const GIT_TERMINAL_PROMPT: string;
+	export const EFC_10152_1592913036: string;
+	export const EFC_10152_4126798990: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
@@ -92,7 +96,7 @@ declare module '$env/static/private' {
 	export const OneDrive: string;
 	export const OneDriveConsumer: string;
 	export const OS: string;
-	export const Path: string;
+	export const PATH: string;
 	export const PATHEXT: string;
 	export const PROCESSOR_ARCHITECTURE: string;
 	export const PROCESSOR_IDENTIFIER: string;
@@ -115,16 +119,11 @@ declare module '$env/static/private' {
 	export const USERNAME: string;
 	export const USERPROFILE: string;
 	export const VSCODE_CODE_CACHE_PATH: string;
-	export const VSCODE_CRASH_REPORTER_PROCESS_TYPE: string;
 	export const VSCODE_CWD: string;
-	export const VSCODE_ESM_ENTRYPOINT: string;
-	export const VSCODE_HANDLES_UNCAUGHT_ERRORS: string;
 	export const VSCODE_IPC_HOOK: string;
 	export const VSCODE_NLS_CONFIG: string;
 	export const VSCODE_PID: string;
 	export const windir: string;
-	export const WINDSURF_EXT_HOST_PID: string;
-	export const WINDSURF_IDE_TYPE: string;
 }
 
 /**
@@ -212,15 +211,21 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		VERCEL_OIDC_TOKEN: string;
-		ACP_BACKEND: string;
 		ALLUSERSPROFILE: string;
 		ANDROID_HOME: string;
 		ANTHROPIC_AUTH_TOKEN: string;
 		ANTHROPIC_BASE_URL: string;
 		ANTHROPIC_MODEL: string;
 		ANTHROPIC_SMALL_FAST_MODEL: string;
+		ANTIGRAVITY_AGENT: string;
+		ANTIGRAVITY_CSRF_TOKEN: string;
+		ANTIGRAVITY_EDITOR_APP_ROOT: string;
+		ANTIGRAVITY_LS_ADDRESS: string;
+		ANTIGRAVITY_SOURCE_METADATA: string;
+		ANTIGRAVITY_TRAJECTORY_ID: string;
 		API_TIMEOUT_MS: string;
 		APPDATA: string;
+		CARGO_TARGET_DIR: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
 		COLOR: string;
 		CommonProgramFiles: string;
@@ -229,10 +234,8 @@ declare module '$env/dynamic/private' {
 		ComSpec: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_2440_1592913036: string;
-		EFC_2440_4126798990: string;
-		ELECTRON_RUN_AS_NODE: string;
-		GIT_TERMINAL_PROMPT: string;
+		EFC_10152_1592913036: string;
+		EFC_10152_4126798990: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
@@ -265,7 +268,7 @@ declare module '$env/dynamic/private' {
 		OneDrive: string;
 		OneDriveConsumer: string;
 		OS: string;
-		Path: string;
+		PATH: string;
 		PATHEXT: string;
 		PROCESSOR_ARCHITECTURE: string;
 		PROCESSOR_IDENTIFIER: string;
@@ -288,16 +291,11 @@ declare module '$env/dynamic/private' {
 		USERNAME: string;
 		USERPROFILE: string;
 		VSCODE_CODE_CACHE_PATH: string;
-		VSCODE_CRASH_REPORTER_PROCESS_TYPE: string;
 		VSCODE_CWD: string;
-		VSCODE_ESM_ENTRYPOINT: string;
-		VSCODE_HANDLES_UNCAUGHT_ERRORS: string;
 		VSCODE_IPC_HOOK: string;
 		VSCODE_NLS_CONFIG: string;
 		VSCODE_PID: string;
 		windir: string;
-		WINDSURF_EXT_HOST_PID: string;
-		WINDSURF_IDE_TYPE: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
